@@ -16,6 +16,22 @@ spec:
         app.kubernetes.io/name: {{ include "local-guide-booking.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      initContainers:
+        - name: database-migrations
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "-m", "flask", "--app", "wsgi", "db", "upgrade"]
+          env:
+            - name: APP_ENV
+              value: {{ .Values.appEnv | quote }}
+          volumeMounts:
+            - name: app-data
+              mountPath: /app/instance
       containers:
         - name: flask-app
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -26,6 +42,9 @@ spec:
           env:
             - name: APP_ENV
               value: {{ .Values.appEnv | quote }}
+          volumeMounts:
+            - name: app-data
+              mountPath: /app/instance
           livenessProbe:
             httpGet:
               path: /health
@@ -38,3 +57,6 @@ spec:
               port: http
             initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
             periodSeconds: {{ .Values.probes.readinessPeriodSeconds }}
+      volumes:
+        - name: app-data
+          emptyDir: {}
