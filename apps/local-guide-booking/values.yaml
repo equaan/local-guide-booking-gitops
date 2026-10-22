@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: equaan/local-guide-booking
-  tag: v0.1.0-22-3d72a976732d
+  tag: v0.1.0-23-3227f5db29a7
   pullPolicy: IfNotPresent
 
 appEnv: dev
